@@ -1,11 +1,38 @@
+
 project:
   name: ai-model-health-monitor
   use_case: customer_churn_prediction
   environment: local
 
 data:
+  dataset:
+    name: ibm_telco_customer_churn
+    source: local
+    path: data/raw/telco_customer_churn.csv
+    format: csv
+
   target_column: Churn
-  random_state: 42
+  id_columns:
+    - customerID
+
+  split:
+    test_size: 0.2
+    random_state: 42
+    stratify: true
+
+  validation:
+    check_missing_values: true
+    check_duplicates: true
+    reject_missing_target: true
+
+  preprocessing:
+    numerical:
+      imputer: median
+      scaler: standard
+
+    categorical:
+      imputer: most_frequent
+      encoder: onehot
 
 logging:
   level: INFO
