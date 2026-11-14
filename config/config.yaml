@@ -1,0 +1,11 @@
+project:
+  name: ai-model-health-monitor
+  use_case: customer_churn_prediction
+  environment: local
+
+data:
+  target_column: Churn
+  random_state: 42
+
+logging:
+  level: INFO

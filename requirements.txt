@@ -1,0 +1,6 @@
+# Phase 0: minimal foundation dependencies
+python-dotenv>=1.0,<2.0
+PyYAML>=6.0,<7.0
+
+# Development/testing
+pytest>=8.0,<9.0
