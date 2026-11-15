@@ -150,4 +150,10 @@ Build one phase at a time. Run relevant tests, inspect outputs and commit only w
 
 ## Current limitations
 
-The prediction API, Docker, monitoring and retraining are not implemented yet. Tracking uses a local SQLite registry, so it is single-user and not shared between machines. The classification threshold is the default 0.5, and it has not been tuned to a business cost.
+- **Docker:** Containerization has not been implemented yet.
+- **Monitoring:** Model performance monitoring and data drift detection are not implemented yet.
+- **Retraining:** Automated model retraining is not implemented yet.
+- **Model registry:** MLflow currently uses a local SQLite tracking database and artifact storage. It is intended for local, single-user development and is not shared across machines.
+- **Classification threshold:** The model uses the default 0.5 classification threshold. It has not been optimized against business-specific false-positive and false-negative costs.
+
+The prediction API is implemented using FastAPI and serves the MLflow-registered model. It provides health, model information, and customer churn prediction endpoints, with automated API tests.

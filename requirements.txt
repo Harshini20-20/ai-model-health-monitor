@@ -1,18 +1,22 @@
 
-# Configuration
-python-dotenv>=1.0,<2.0
-PyYAML>=6.0,<7.0
-
-# Data engineering
-numpy>=1.26,<3.0
-pandas>=2.2,<3.0
-scikit-learn==1.8.0
-
 # Machine learning
 joblib>=1.4,<2.0
+scikit-learn>=1.5,<2.0
+pandas>=2.2,<4.0
+numpy>=1.26,<3.0
 
 # Experiment tracking and model registry
 mlflow>=3.18,<4.0
 
+# API serving
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+pydantic>=2.9,<3.0
+
 # Development and testing
 pytest>=8.0,<9.0
+httpx>=0.27,<1.0
+
+# Configuration
+PyYAML>=6.0,<7.0
+python-dotenv>=1.0,<2.0
