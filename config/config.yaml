@@ -12,8 +12,15 @@ data:
     format: csv
 
   target_column: Churn
+  positive_class: "Yes"
+  negative_class: "No"
   id_columns:
     - customerID
+  numerical_columns:
+    - SeniorCitizen
+    - tenure
+    - MonthlyCharges
+    - TotalCharges
 
   split:
     test_size: 0.2
@@ -33,6 +40,45 @@ data:
     categorical:
       imputer: most_frequent
       encoder: onehot
+
+  processed:
+    train_path: data/processed/train.csv
+    test_path: data/processed/test.csv
+
+training:
+  random_state: 42
+  cv_folds: 5
+  n_jobs: -1
+  imbalance_strategy: balanced        # balanced | none
+  scoring:
+    - accuracy
+    - precision
+    - recall
+    - f1
+    - roc_auc
+  selection_metric: roc_auc           # must be listed in scoring
+  artifacts:
+    model_dir: models
+    model_version: v1
+    reports_dir: reports
+  models:
+    logistic_regression:
+      params:
+        max_iter: 1000
+      param_grid:
+        C: [0.1, 1.0, 10.0]
+    random_forest:
+      params:
+        n_estimators: 200
+      param_grid:
+        max_depth: [null, 6, 10]
+        min_samples_leaf: [1, 5]
+    gradient_boosting:
+      params: {}
+      param_grid:
+        n_estimators: [100, 200]
+        learning_rate: [0.05, 0.1]
+        max_depth: [2, 3]
 
 logging:
   level: INFO
