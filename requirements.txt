@@ -11,5 +11,8 @@ scikit-learn==1.8.0
 # Machine learning
 joblib>=1.4,<2.0
 
+# Experiment tracking and model registry
+mlflow>=3.18,<4.0
+
 # Development and testing
 pytest>=8.0,<9.0

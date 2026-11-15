@@ -13,7 +13,7 @@ The system will progressively implement:
 8. GitHub Actions CI
 9. Controlled retraining, model promotion and rollback
 
-> Current status: Phase 2 — model training. Features are added phase by phase after their tests pass.
+> Current status: Phase 3 — MLflow experiment tracking and model registry (Phase 2 model training is complete). Features are added phase by phase after their tests pass.
 
 ## Technology stack
 
@@ -111,10 +111,43 @@ probability_of_churn = pipeline.predict_proba(raw_rows_df)[:, 1]
 
 Hyperparameters, seeds, CV folds, scoring and the selection metric are set in the `training:` section of `config/config.yaml`. The artifact was built with scikit-learn 1.8.0, so load it with the same version.
 
+## Phase 3 — Experiment tracking and model registry
+
+Every training run is logged to MLflow. Each `python -m src.training.train` call creates one parent run in the `churn_training` experiment, with a nested child run for each candidate model. The registry stores every trained pipeline as a new version of `churn_pipeline` and moves the `candidate` alias to it. Tracking is controlled by the `tracking:` section of `config/config.yaml`; set `enabled: false` to run Phase 2 without MLflow.
+
+```bash
+# Train and log the run (writes mlflow.db and mlruns/ in the project root)
+python -m src.training.train
+
+# Browse runs and registered models in the MLflow UI (optional)
+python -m mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
+```
+
+The parent run records the selection metric, seed, CV folds, imbalance strategy and split sizes as parameters, and the selected model's CV and test metrics. Each child run records that candidate's best hyperparameters, CV mean and standard deviation, test metrics and test confusion matrix. The comparison report, evaluation metrics and model metadata are attached as run artifacts.
+
+Lifecycle: training only ever sets the `candidate` alias. Nothing is promoted automatically; promotion to a production alias belongs to the Phase 9 quality gates. The registry copy of the model predicts exactly like the Phase 2 joblib file, which is still written as before.
+
+Load the candidate model from the registry:
+
+```python
+from pathlib import Path
+
+import mlflow.sklearn
+
+from src.config import load_config
+from src.tracking.mlflow_setup import resolve_tracking_uri, tracking_uri_scope
+
+uri = resolve_tracking_uri(load_config()["tracking"], base_dir=Path("."))
+with tracking_uri_scope(uri):
+    model = mlflow.sklearn.load_model("models:/churn_pipeline@candidate")
+```
+
+The model is stored with cloudpickle, the same trust level as the Phase 2 joblib file. Load it only from a registry you control. Registered models have no input signature, so serving code must send the raw columns listed in `input_columns`.
+
 ## Development approach
 
 Build one phase at a time. Run relevant tests, inspect outputs and commit only working milestones. See `docs/` for design notes as the project grows.
 
 ## Current limitations
 
-Experiment tracking (MLflow), the prediction API, Docker, monitoring and retraining are not implemented yet. The classification threshold is the default 0.5, and it has not been tuned to a business cost.
+The prediction API, Docker, monitoring and retraining are not implemented yet. Tracking uses a local SQLite registry, so it is single-user and not shared between machines. The classification threshold is the default 0.5, and it has not been tuned to a business cost.

@@ -80,5 +80,14 @@ training:
         learning_rate: [0.05, 0.1]
         max_depth: [2, 3]
 
+tracking:
+  enabled: true
+  tracking_uri: sqlite:///mlflow.db    # relative paths resolve from the project root
+  artifact_root: mlruns
+  experiment_name: churn_training
+  registry:
+    model_name: churn_pipeline
+    candidate_alias: candidate         # set on every newly trained version
+
 logging:
   level: INFO

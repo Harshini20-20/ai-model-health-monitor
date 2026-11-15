@@ -37,6 +37,8 @@ from src.training.evaluation import (
     write_json,
 )
 from src.training.models import build_candidate_models
+from src.tracking.mlflow_setup import validate_tracking_config
+from src.tracking.training_runs import log_training_session
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +217,11 @@ def run_training(config: dict, root_dir: Path | None = None) -> dict:
     selection_metric = training_config["selection_metric"]
     _validate_training_config(scoring, selection_metric)
 
+    tracking_config = config.get("tracking") or {}
+    tracking_enabled = bool(tracking_config.get("enabled", False))
+    if tracking_enabled:
+        validate_tracking_config(tracking_config)
+
     base_dir = root_dir or PROJECT_ROOT
 
     train_df, test_df = load_processed_datasets(config, root_dir=base_dir)
@@ -332,12 +339,48 @@ def run_training(config: dict, root_dir: Path | None = None) -> dict:
     logger.info("Saved comparison to %s", comparison_path)
     logger.info("Saved metrics to %s", metrics_path)
 
-    return {
+    summary = {
         "selected_model": best_name,
         "model_path": str(model_path),
         "comparison_path": str(comparison_path),
         "metrics_path": str(metrics_path),
     }
+
+    if tracking_enabled:
+        tracking_summary = log_training_session(
+            tracking_config,
+            base_dir,
+            model_version=version,
+            run_params={
+                "selected_model": best_name,
+                "selection_metric": selection_metric,
+                "cv_folds": training_config["cv_folds"],
+                "random_state": seed,
+                "imbalance_strategy": training_config["imbalance_strategy"],
+                "decision_threshold": DECISION_THRESHOLD,
+                "train_rows": len(X_train),
+                "test_rows": len(X_test),
+                "train_positive_rate": float(y_train.mean()),
+                "test_positive_rate": float(y_test.mean()),
+            },
+            tuned=tuned,
+            test_results=test_results,
+            selected_model=best_name,
+            scoring=scoring,
+            selection_metric=selection_metric,
+            best_pipeline=best_result["estimator"],
+            reports=[comparison_path, metrics_path],
+            metadata_path=model_path.with_suffix(".metadata.json"),
+        )
+        summary.update(tracking_summary)
+        logger.info(
+            "Logged MLflow run %s and registered %s version %s",
+            tracking_summary["mlflow_run_id"],
+            tracking_summary["registered_model_name"],
+            tracking_summary["registry_version"],
+        )
+
+    return summary
 
 
 def main() -> None:
