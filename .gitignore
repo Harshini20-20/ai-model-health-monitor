@@ -1,30 +1,32 @@
-# Python
+
+# Python cache and virtual environments
 __pycache__/
 *.py[cod]
-*.pyd
-.Python
+.pytest_cache/
 .venv/
 venv/
-env/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
 
-# Environment and secrets
+# Environment variables and secrets
 .env
 .env.*
-!.env.example
 
-# Local data and generated artifacts
+# Local datasets
 data/raw/*
-data/processed/*
-data/reference/*
 !data/raw/.gitkeep
+data/processed/*
 !data/processed/.gitkeep
+data/reference/*
 !data/reference/.gitkeep
+
+# Local model artifacts
 models/*
 !models/.gitkeep
+
+# MLflow tracking database and artifacts
 mlruns/
+mlflow.db
+mlflow.db-shm
+mlflow.db-wal
 *.db
 *.sqlite
 *.sqlite3
@@ -33,7 +35,9 @@ mlruns/
 reports/*
 !reports/.gitkeep
 *.log
-.DS_Store
-Thumbs.db
+
+# Editors and operating system
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
